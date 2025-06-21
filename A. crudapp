@@ -1,0 +1,288 @@
+//sql
+CREATE DATABASE IF NOT EXISTS crudapp;
+USE crudapp;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(15) NOT NULL
+);
+
+
+
+
+//connect.php
+<?php
+$con = new mysqli('localhost', 'root', '', 'crudapp');
+
+if ($con->connect_error) {
+    die("Connection failed: " . $con->connect_error);
+}
+?>
+
+
+
+//create.php
+<?php
+include 'connect.php';
+if (isset($_POST['submit'])) {
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+
+    $sql = "INSERT INTO users (name, email, phone) VALUES ('$name', '$email', '$phone')";
+    if (mysqli_query($con, $sql)) {
+        header("Location: display.php");
+        exit;
+    } else {
+        echo "Insert failed: " . mysqli_error($con);
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add User</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            font-size: 18px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 700px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button, a.button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        a.button.secondary {
+            background: #777;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Add New User</h2>
+    <form method="post">
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="text" name="phone" placeholder="Phone" required>
+        <button type="submit" name="submit">Save</button>
+        <a href="display.php" class="button secondary">Cancel</a>
+    </form>
+</div>
+</body>
+</html>
+
+
+
+//delete.php
+<?php
+include 'connect.php';
+
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    mysqli_query($con, "DELETE FROM users WHERE id = $id");
+}
+header("Location: display.php");
+exit;
+?>
+
+
+
+//display.php
+<?php include 'connect.php'; ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Records</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            font-size: 18px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #f0f0f0;
+        }
+        .button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            color: white;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        .add-btn {
+            background: #4CAF50;
+        }
+        .edit-btn {
+            background: #007BFF;
+        }
+        .delete-btn {
+            background: #D9534F;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>User List</h2>
+    <a href="create.php" class="button add-btn">+ Add User</a>
+    <table>
+        <tr>
+            <th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th>
+        </tr>
+        <?php
+        $result = mysqli_query($con, "SELECT * FROM users");
+        while ($row = mysqli_fetch_assoc($result)) {
+            echo "<tr>
+                    <td>{$row['id']}</td>
+                    <td>" . htmlspecialchars($row['name']) . "</td>
+                    <td>" . htmlspecialchars($row['email']) . "</td>
+                    <td>" . htmlspecialchars($row['phone']) . "</td>
+                    <td>
+                        <a href='update.php?id={$row['id']}' class='button edit-btn'>Edit</a>
+                        <a href='delete.php?id={$row['id']}' class='button delete-btn'>Delete</a>
+                    </td>
+                </tr>";
+        }
+        ?>
+    </table>
+</div>
+</body>
+</html>
+
+
+
+//update.php
+<?php
+include 'connect.php';
+
+$id = $_GET['id'];
+$result = mysqli_query($con, "SELECT * FROM users WHERE id = $id");
+$user = mysqli_fetch_assoc($result);
+
+if (isset($_POST['submit'])) {
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+
+    $sql = "UPDATE users SET name='$name', email='$email', phone='$phone' WHERE id=$id";
+    if (mysqli_query($con, $sql)) {
+        header("Location: display.php");
+        exit;
+    } else {
+        echo "Update failed: " . mysqli_error($con);
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit User</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            font-size: 18px;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 700px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button, a.button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        a.button.secondary {
+            background: #777;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Edit User</h2>
+    <form method="post">
+        <input type="text" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
+        <input type="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+        <input type="text" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" required>
+        <button type="submit" name="submit">Update</button>
+        <a href="display.php" class="button secondary">Cancel</a>
+    </form>
+</div>
+</body>
+</html>
